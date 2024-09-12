@@ -5,29 +5,20 @@ export async function middleware(req: NextRequest) {
     axios.defaults.withCredentials = true;
     axios.defaults.withXSRFToken = true;
 
-    const session = req.cookies.get("laravel_session")?.value;
-    const csrf = req.cookies.get("XSRF-TOKEN")?.value;
+    const cookies = req.cookies.getAll();
+    let parsedCookies = cookies.map(cookie => {
+        return `${cookie.name}=${cookie.value}`;
+    })
 
     try {
-        const response = await axios.get("http://api.mykid.lc/api/user", {
+        await axios.get("http://api.mykid.lc/api/user", {
             headers: {
-                Cookie: `laravel_sesion=${session}`,
-                Accept: "application/json, text/plain, */*",
-                "X-XSRF-TOKEN": csrf,
-                Referer: 'http://admin.mykid.lc/',
-                "Content-Type": 'application/json',
-                "Host": "api.mykid.lc"
+                Cookie: parsedCookies.join("; "),
+                Accept: "application/json",
+                'X-Requested-With': 'XMLHttpRequest',
             },
         })
-
-        console.log(response.data);
     } catch (err) {
-        const axiosError = err as AxiosError;
-        console.log(axiosError.code);
-        // console.log(axiosError.cause);
-        console.log(axiosError.message);
-        console.log(session);
-        console.log(csrf);
-        return NextResponse.redirect("http://mykid.lc/login");
+        console.log(err);
     }
 }
